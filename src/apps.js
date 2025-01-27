@@ -1,17 +1,21 @@
 const express = require('express');
 const app = express();
-const productsRoutes = require('./routes/productsRoutes');
-const cartsRoutes = require('./routes/cartsRoutes');
+const productsRoutes = require('../src/routes/productsRoutes');
+const cartsRoutes = require('../src/routes/cartsRoutes');
 
-// Middleware para parsear el body como JSON
 app.use(express.json());
 
-// Rutas
-app.use('/api/products', productsRoutes);
-app.use('/api/carts', cartsRoutes);
+// Servir archivos estáticos desde la carpeta 'public'
+app.use(express.static('public'));  // Esto sirve tu archivo index.html
 
-// Puerto de escucha
-const PORT = 8080;
-app.listen(PORT, () => {
-  console.log(`Servidor esta escuchando en el ${PORT}`);
+// Configuración de las rutas de la API
+app.use('/api/products', productsRoutes);  // Ruta para manejar productos
+app.use('/api/carts', cartsRoutes);        // Ruta para manejar carritos
+
+// Si no se encuentran otras rutas, se sirve el archivo index.html en la raíz
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '../public/index.html');
 });
+
+// Exportar la aplicación para usarla en index.js
+module.exports = app;

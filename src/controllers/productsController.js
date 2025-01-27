@@ -1,112 +1,100 @@
 const fs = require('fs');
 const path = require('path');
+const productosFilePath = path.join(__dirname, '../../data/products.json');
 
-// Ruta de archivo de productos
-const productsFilePath = path.join(__dirname, '../../data/products.json');
-
-// Leer los productos desde el archivo
-const readProducts = () => {
-  const data = fs.readFileSync(productsFilePath, 'utf-8');
+// Leer productos desde el archivo
+function readProducts() {
+  const data = fs.readFileSync(productosFilePath, 'utf-8');
   return JSON.parse(data);
-};
+}
 
-// Guardar productos en el archivo
-const saveProducts = (products) => {
-  fs.writeFileSync(productsFilePath, JSON.stringify(products, null, 2));
-};
+// Escribir productos al archivo
+function writeProducts(products) {
+  fs.writeFileSync(productosFilePath, JSON.stringify(products, null, 2));
+}
 
-// Controlador para obtener todos los productos
-const getProducts = (req, res) => {
-  const products = readProducts();
-  const { limit } = req.query;
+// Obtener todos los productos
+function getAllProducts(req, res) {
+  const limit = parseInt(req.query.limit) || null;
+  let products = readProducts();
+  
+  if (limit) {
+    products = products.slice(0, limit);
+  }
 
-  // Si existe un límite, solo devolver los productos solicitados
-  const result = limit ? products.slice(0, Number(limit)) : products;
-  res.json(result);
-};
+  res.json(products);
+}
 
-// Controlador para obtener un producto por ID
-const getProductById = (req, res) => {
+// Obtener producto por id
+function getProductById(req, res) {
   const products = readProducts();
   const product = products.find(p => p.id === req.params.pid);
   
   if (product) {
     res.json(product);
   } else {
-    res.status(404).json({ error: 'Producto no encontrado' });
+    res.status(404).send('Producto no encontrado');
   }
-};
+}
 
-// Controlador para agregar un nuevo producto
-const createProduct = (req, res) => {
-  const { title, description, code, price, stock, category, thumbnails = [] } = req.body;
-  
-  if (!title || !description || !code || !price || !stock || !category) {
-    return res.status(400).json({ error: 'Todos los campos son obligatorios' });
-  }
-
+// Agregar un nuevo producto
+function addProduct(req, res) {
+  const { title, description, code, price, status = true, stock, category, thumbnails = [] } = req.body;
   const products = readProducts();
+
   const newProduct = {
-    id: products.length ? products[products.length - 1].id + 1 : 1, // Autogenerar ID
+    id: (products.length > 0 ? products[products.length - 1].id + 1 : 1),
     title,
     description,
     code,
     price,
-    status: true,
+    status,
     stock,
     category,
     thumbnails,
   };
 
   products.push(newProduct);
-  saveProducts(products);
+  writeProducts(products);
 
   res.status(201).json(newProduct);
-};
+}
 
-// Controlador para actualizar un producto
-const updateProduct = (req, res) => {
+// Actualizar producto
+function updateProduct(req, res) {
   const { pid } = req.params;
-  const { title, description, code, price, stock, category, thumbnails } = req.body;
+  const updatedData = req.body;
 
   const products = readProducts();
   const productIndex = products.findIndex(p => p.id === parseInt(pid));
 
-  if (productIndex === -1) {
-    return res.status(404).json({ error: 'Producto no encontrado' });
+  if (productIndex !== -1) {
+    const updatedProduct = { ...products[productIndex], ...updatedData };
+    products[productIndex] = updatedProduct;
+    writeProducts(products);
+
+    res.json(updatedProduct);
+  } else {
+    res.status(404).send('Producto no encontrado');
   }
+}
 
-  const updatedProduct = {
-    ...products[productIndex],
-    title,
-    description,
-    code,
-    price,
-    stock,
-    category,
-    thumbnails,
-  };
-
-  products[productIndex] = updatedProduct;
-  saveProducts(products);
-
-  res.json(updatedProduct);
-};
-
-// Controlador para eliminar un producto
-const deleteProduct = (req, res) => {
+// Eliminar producto
+function deleteProduct(req, res) {
   const { pid } = req.params;
   let products = readProducts();
-  
-  const productIndex = products.findIndex(p => p.id === parseInt(pid));
-  if (productIndex === -1) {
-    return res.status(404).json({ error: 'Producto no encontrado' });
-  }
 
   products = products.filter(p => p.id !== parseInt(pid));
-  saveProducts(products);
+  writeProducts(products);
 
-  res.status(204).end();
+  res.status(204).send();
+}
+
+module.exports = {
+  getAllProducts,
+  getProductById,
+  addProduct,
+  updateProduct,
+  deleteProduct,
 };
 
-module.exports = { getProducts, getProductById, createProduct, updateProduct, deleteProduct };

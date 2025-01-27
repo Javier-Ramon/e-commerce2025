@@ -1,69 +1,73 @@
 const fs = require('fs');
 const path = require('path');
+const carritoFilePath = path.join(__dirname, '../../data/carrito.json');
+const productosFilePath = path.join(__dirname, '../../data/products.json');
 
-// Ruta de archivo de carritos
-const cartsFilePath = path.join(__dirname, '../../data/carts.json');
-
-// Leer los carritos desde el archivo
-const readCarts = () => {
-  const data = fs.readFileSync(cartsFilePath, 'utf-8');
+// Leer carritos desde el archivo
+function readCarts() {
+  const data = fs.readFileSync(carritoFilePath, 'utf-8');
   return JSON.parse(data);
-};
+}
 
-// Guardar carritos en el archivo
-const saveCarts = (carts) => {
-  fs.writeFileSync(cartsFilePath, JSON.stringify(carts, null, 2));
-};
+// Escribir carritos al archivo
+function writeCarts(carts) {
+  fs.writeFileSync(carritoFilePath, JSON.stringify(carts, null, 2));
+}
 
-// Controlador para crear un nuevo carrito
-const createCart = (req, res) => {
+// Crear un nuevo carrito
+function createCart(req, res) {
+  const carts = readCarts();
   const newCart = {
-    id: Date.now().toString(),
-    products: [],
+    id: (carts.length > 0 ? carts[carts.length - 1].id + 1 : 1),
+    products: []
   };
 
-  const carts = readCarts();
   carts.push(newCart);
-  saveCarts(carts);
+  writeCarts(carts);
 
   res.status(201).json(newCart);
-};
+}
 
-// Controlador para obtener los productos de un carrito
-const getCartById = (req, res) => {
+// Obtener productos en el carrito
+function getCart(req, res) {
   const { cid } = req.params;
   const carts = readCarts();
+  const cart = carts.find(c => c.id === parseInt(cid));
 
-  const cart = carts.find(c => c.id === cid);
-  if (!cart) {
-    return res.status(404).json({ error: 'Carrito no encontrado' });
-  }
-
-  res.json(cart);
-};
-
-// Controlador para agregar un producto al carrito
-const addProductToCart = (req, res) => {
-  const { cid, pid } = req.params;
-  const { quantity } = req.body;
-
-  const carts = readCarts();
-  const cart = carts.find(c => c.id === cid);
-  
-  if (!cart) {
-    return res.status(404).json({ error: 'Carrito no encontrado' });
-  }
-
-  let productInCart = cart.products.find(p => p.product === pid);
-
-  if (productInCart) {
-    productInCart.quantity += quantity || 1; // Incrementar la cantidad
+  if (cart) {
+    res.json(cart.products);
   } else {
-    cart.products.push({ product: pid, quantity: quantity || 1 });
+    res.status(404).send('Carrito no encontrado');
   }
+}
 
-  saveCarts(carts);
-  res.json(cart);
+// Agregar un producto al carrito
+function addProductToCart(req, res) {
+  const { cid, pid } = req.params;
+  const carts = readCarts();
+  const products = JSON.parse(fs.readFileSync(productosFilePath, 'utf-8'));
+
+  const cart = carts.find(c => c.id === parseInt(cid));
+  const product = products.find(p => p.id === parseInt(pid));
+
+  if (cart && product) {
+    const existingProduct = cart.products.find(p => p.product === pid);
+
+    if (existingProduct) {
+      existingProduct.quantity += 1;
+    } else {
+      cart.products.push({ product: pid, quantity: 1 });
+    }
+
+    writeCarts(carts);
+    res.json(cart);
+  } else {
+    res.status(404).send('Carrito o producto no encontrado');
+  }
+}
+
+module.exports = {
+  createCart,
+  getCart,
+  addProductToCart,
 };
-
-module.exports = { createCart, getCartById, addProductToCart };
