@@ -3,18 +3,18 @@ const path = require('path');
 const carritoFilePath = path.join(__dirname, '../../data/carrito.json');
 const productosFilePath = path.join(__dirname, '../../data/products.json');
 
-// Leer carritos desde el archivo
+
 function readCarts() {
   const data = fs.readFileSync(carritoFilePath, 'utf-8');
   return JSON.parse(data);
 }
 
-// Escribir carritos al archivo
+
 function writeCarts(carts) {
   fs.writeFileSync(carritoFilePath, JSON.stringify(carts, null, 2));
 }
 
-// Crear un nuevo carrito
+
 function createCart(req, res) {
   const carts = readCarts();
   const newCart = {
@@ -28,7 +28,7 @@ function createCart(req, res) {
   res.status(201).json(newCart);
 }
 
-// Obtener productos en el carrito
+
 function getCart(req, res) {
   const { cid } = req.params;
   const carts = readCarts();
@@ -41,7 +41,7 @@ function getCart(req, res) {
   }
 }
 
-// Agregar un producto al carrito
+
 function addProductToCart(req, res) {
   const { cid, pid } = req.params;
   const carts = readCarts();

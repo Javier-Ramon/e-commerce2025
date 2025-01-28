@@ -2,18 +2,18 @@ const fs = require('fs');
 const path = require('path');
 const productosFilePath = path.join(__dirname, '../../data/products.json');
 
-// Leer productos desde el archivo
+
 function readProducts() {
   const data = fs.readFileSync(productosFilePath, 'utf-8');
   return JSON.parse(data);
 }
 
-// Escribir productos al archivo
+
 function writeProducts(products) {
   fs.writeFileSync(productosFilePath, JSON.stringify(products, null, 2));
 }
 
-// Obtener todos los productos
+
 function getAllProducts(req, res) {
   const limit = parseInt(req.query.limit) || null;
   let products = readProducts();
@@ -25,7 +25,7 @@ function getAllProducts(req, res) {
   res.json(products);
 }
 
-// Obtener producto por id
+
 function getProductById(req, res) {
   const products = readProducts();
   const product = products.find(p => p.id === req.params.pid);
@@ -37,7 +37,7 @@ function getProductById(req, res) {
   }
 }
 
-// Agregar un nuevo producto
+
 function addProduct(req, res) {
   const { title, description, code, price, status = true, stock, category, thumbnails = [] } = req.body;
   const products = readProducts();
@@ -60,7 +60,7 @@ function addProduct(req, res) {
   res.status(201).json(newProduct);
 }
 
-// Actualizar producto
+
 function updateProduct(req, res) {
   const { pid } = req.params;
   const updatedData = req.body;
@@ -79,7 +79,7 @@ function updateProduct(req, res) {
   }
 }
 
-// Eliminar producto
+
 function deleteProduct(req, res) {
   const { pid } = req.params;
   let products = readProducts();
