@@ -1,0 +1,11 @@
+[{
+    "message": "Carrito creado exitosamente",
+    "carrito": {
+      "id": 1650000000000,
+      "products": [
+        { "id": 1, "quantity": 2 },
+        { "id": 2, "quantity": 1 }
+      ]
+    }
+  }
+  ]
