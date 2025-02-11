@@ -1,73 +1,62 @@
-const fs = require('fs');
-const path = require('path');
-const carritoFilePath = path.join(__dirname, '../../data/carrito.json');
-const productosFilePath = path.join(__dirname, '../../data/products.json');
+// Importamos el modelo del carrito
+import carts_manager from "../models/carts_manager";
 
+// Función para obtener todos los carritos
+export const getCarts = async (req, res) => {
+ try {
+  const carts = await carts_manager.getCarts();
 
-function readCarts() {
-  const data = fs.readFileSync(carritoFilePath, 'utf-8');
-  return JSON.parse(data);
-}
+  res.status(200).json(carts);
+ } catch (error) {
 
+  res.status(500).json({ message: "Error al obtener los carritos", error });
+ }
+};
 
-function writeCarts(carts) {
-  fs.writeFileSync(carritoFilePath, JSON.stringify(carts, null, 2));
-}
+// Función para obtener un carrito por ID
+export const getCartByIdController = async (req, res) => {
+ try {
+  const { cid } = req.params;
 
+  const cart = await carts_manager.getCartById(cid);
 
-function createCart(req, res) {
-  const carts = readCarts();
-  const newCart = {
-    id: (carts.length > 0 ? carts[carts.length - 1].id + 1 : 1),
-    products: []
-  };
+  if (!cart) {
+   return res.status(404).json({ message: "Carrito no encontrado" });
+  }
 
-  carts.push(newCart);
-  writeCarts(carts);
+  res.status(200).json(cart);
+ } catch (error) {
+
+  res.status(500).json({ message: "Error al obtener el carrito", error });
+ }
+};
+
+// Función para crear un nuevo carrito
+export const createCart = async (req, res) => {
+ try {
+  const newCart = await carts_manager.createCart();
 
   res.status(201).json(newCart);
-}
+ } catch (error) {
 
+  res.status(500).json({ message: "Error al crear el carrito", error });
+ }
+};
 
-function getCart(req, res) {
-  const { cid } = req.params;
-  const carts = readCarts();
-  const cart = carts.find(c => c.id === parseInt(cid));
-
-  if (cart) {
-    res.json(cart.products);
-  } else {
-    res.status(404).send('Carrito no encontrado');
-  }
-}
-
-
-function addProductToCart(req, res) {
+// Función para agregar un producto al carrito
+export const addProductToCartController = async (req, res) => {
+ try {
   const { cid, pid } = req.params;
-  const carts = readCarts();
-  const products = JSON.parse(fs.readFileSync(productosFilePath, 'utf-8'));
 
-  const cart = carts.find(c => c.id === parseInt(cid));
-  const product = products.find(p => p.id === parseInt(pid));
+  const updatedCart = await carts_manager.addProductToCart(cid, pid);
 
-  if (cart && product) {
-    const existingProduct = cart.products.find(p => p.product === pid);
-
-    if (existingProduct) {
-      existingProduct.quantity += 1;
-    } else {
-      cart.products.push({ product: pid, quantity: 1 });
-    }
-
-    writeCarts(carts);
-    res.json(cart);
-  } else {
-    res.status(404).send('Carrito o producto no encontrado');
+  if (!updatedCart) {
+   return res.status(404).json({ message: "Carrito no encontrado" });
   }
-}
 
-module.exports = {
-  createCart,
-  getCart,
-  addProductToCart,
+  res.status(200).json(updatedCart);
+ } catch (error) {
+
+  res.status(500).json({ message: "Error al agregar el producto al carrito",error });
+ }
 };

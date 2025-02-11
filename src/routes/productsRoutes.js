@@ -1,13 +1,17 @@
-const express = require('express');
-const router = express.Router();
-const productsController = require('../controllers/productsController');
+// Importamos el objeto Router desde express. y los controladores de productos.
+import { Router } from "express";
+import { getAllProducts, getProductById, addProduct, updateProduct, deleteProduct } from "../controllers/productsController";
 
+// Ejecutamos la función Router para obtener un objeto Router.
+const productsRouter = Router();
 
-router.get('/', productsController.getAllProducts); 
-router.get('/:pid', productsController.getProductById); 
-router.post('/', productsController.addProduct); 
-router.put('/:pid', productsController.updateProduct); 
-router.delete('/:pid', productsController.deleteProduct); 
+// Rutas para productos
+productsRouter.get("/", getAllProducts);
+productsRouter.get("/:pid", getProductById);
+productsRouter.post("/", addProduct);
+productsRouter.put("/:pid", updateProduct);
+productsRouter.delete("/:pid", deleteProduct);
 
-module.exports = router;
+// Exportamos el router.
+export default productsRouter;
 

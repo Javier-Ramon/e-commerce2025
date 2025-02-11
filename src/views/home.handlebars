@@ -1,0 +1,20 @@
+<div class="container mt-4">
+ <div class="row">
+  <ul class="d-flex justify-content-center gap-5 list-unstyled">
+   {{#each products}}
+    <div class="col-md-4 mb-4">
+     <div class="card text-center border-none shadow-sm h-100">
+       <img src="{{this.thumbnails.[0]}}" class="card-img-top img-fluid img-thumbnails" alt="{{this.title}}">
+       <div class="card-body d-flex flex-column">
+        <h2 class="card-title">{{this.title}}</h2>
+        <p class="card-text">{{this.description}}</p>
+        <p class="card-text"><strong>Código: </strong>{{this.code}}</p>
+        <p class="card-text"><strong>Precio: </strong>${{this.price}}</p>
+        <p class="card-text"><strong>Categoría: </strong>{{this.category}}</p>
+       </div>
+     </div>
+    </div>
+   {{/each}}
+  </ul>
+ </div>
+</div>

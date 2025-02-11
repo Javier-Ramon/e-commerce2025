@@ -1,22 +1,14 @@
-const express = require('express');
-const router = express.Router();
-const cartsController = require('../controllers/cartsController');
+import { Router } from "express";
+import { getCarts, getCartByIdController, createCart, addProductToCartController } from "../controllers/cartsController";
 
+// Ejecutamos la función Router para obtener un objeto Router.
+const cartsRouter = Router();
 
-router.post('/', cartsController.createCart);
-router.get('/:cid', cartsController.getCart); 
-router.post('/:cid/product/:pid', cartsController.addProductToCart); 
-router.post('/', (req, res) => {
+// Rutas para carritos
+cartsRouter.get("/", getCarts);
+cartsRouter.get("/:cid", getCartByIdController);
+cartsRouter.post("/", createCart);
+cartsRouter.post("/:cid/product/:pid", addProductToCartController);
 
-    const carrito = {
-        id: new Date().getTime(), 
-        products: req.body.products || [] 
-    };
-
-    res.status(201).json({
-        message: 'Carrito creado exitosamente',
-        carrito: carrito
-    });
-});
-
-module.exports = router;
+// Exportamos el router.
+export default cartsRouter;

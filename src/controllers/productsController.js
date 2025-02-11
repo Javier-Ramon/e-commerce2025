@@ -1,100 +1,86 @@
-const fs = require('fs');
-const path = require('path');
-const productosFilePath = path.join(__dirname, '../../data/products.json');
+// Importamos el modelo de los productos
+import products_manager from "../models/products_manager";
 
+// Función para obtener todos los productos
+export const getAllProducts = async (req, res) => {
+ try {
+  const limit = parseInt(req.query.limit);
+  const products = await products_manager.getProducts(limit);
 
-function readProducts() {
-  const data = fs.readFileSync(productosFilePath, 'utf-8');
-  return JSON.parse(data);
-}
+  res.status(200).json(products);
+ } catch (error) {
 
+  res.status(500).json({ message: "Error al obtener los productos", error });
+ }
+};
 
-function writeProducts(products) {
-  fs.writeFileSync(productosFilePath, JSON.stringify(products, null, 2));
-}
+// Función para obtener un producto por ID
+export const getProductById = async (req, res) => {
+ try {
+  const product = await products_manager.getProductById(req.params.pid);
 
-
-function getAllProducts(req, res) {
-  const limit = parseInt(req.query.limit) || null;
-  let products = readProducts();
-  
-  if (limit) {
-    products = products.slice(0, limit);
+  if (!product) {
+   return res.status(404).json({ message: "Producto no encontrado" });
   }
 
-  res.json(products);
-}
+  res.status(200).json(product);
+ } catch (error) {
 
+  res.status(500).json({ message: "Error al obtener el producto", error });
+ }
+};
 
-function getProductById(req, res) {
-  const products = readProducts();
-  const product = products.find(p => p.id === req.params.pid);
-  
-  if (product) {
-    res.json(product);
-  } else {
-    res.status(404).send('Producto no encontrado');
+// Función para agregar un producto
+export const addProduct = async (req, res) => {
+ try {
+  const { title, description, code, price, stock, category } = req.body;
+  const thumbnails = req.file ? `/img/${req.file.filename}` : null;
+
+  if (!title || !description || !code || !price || !stock || !category || !thumbnails ) {
+   return res.status(400).json({ message: "Todos los campos son obligatorios, excepto thumbnails" });
   }
-}
 
+  const createdProduct = await products_manager.addProduct({ title, description, code, price, stock, category, thumbnails  });
 
-function addProduct(req, res) {
-  const { title, description, code, price, status = true, stock, category, thumbnails = [] } = req.body;
-  const products = readProducts();
+  res.status(201).json(createdProduct);
+ } catch (error) {
 
-  const newProduct = {
-    id: (products.length > 0 ? products[products.length - 1].id + 1 : 1),
-    title,
-    description,
-    code,
-    price,
-    status,
-    stock,
-    category,
-    thumbnails,
-  };
+  res.status(500).json({ message: "Error al agregar el producto", error });
+ }
+};
 
-  products.push(newProduct);
-  writeProducts(products);
-
-  res.status(201).json(newProduct);
-}
-
-
-function updateProduct(req, res) {
+// Función para modificar un producto
+export const updateProduct = async (req, res) => {
+ try {
   const { pid } = req.params;
   const updatedData = req.body;
 
-  const products = readProducts();
-  const productIndex = products.findIndex(p => p.id === parseInt(pid));
+  const updateProduct = await products_manager.updateProduct(pid, updatedData);
 
-  if (productIndex !== -1) {
-    const updatedProduct = { ...products[productIndex], ...updatedData };
-    products[productIndex] = updatedProduct;
-    writeProducts(products);
-
-    res.json(updatedProduct);
-  } else {
-    res.status(404).send('Producto no encontrado');
+  if (!updateProduct) {
+   return res.status(404).json({ message: "Producto no encontrado" });
   }
-}
 
+  res.status(200).json(updateProduct);
+ } catch(error) {
 
-function deleteProduct(req, res) {
-  const { pid } = req.params;
-  let products = readProducts();
-
-  products = products.filter(p => p.id !== parseInt(pid));
-  writeProducts(products);
-
-  res.status(204).send();
-}
-
-module.exports = {
-  getAllProducts,
-  getProductById,
-  addProduct,
-  updateProduct,
-  deleteProduct,
+  res.status(500).json({ message: "Error modificando el producto", error });
+ }
 };
 
+// Función para eliminar un producto
+export const deleteProduct = async (req, res) => {
+ try {
+  const isDeleted = await products_manager.deleteProduct(req.params.pid);
+
+  if (!isDeleted) {
+   return res.status(404).json({ message: "Producto no encontrado" });
+  }
+
+  res.status(200).json({ message: "Producto eliminado correctamente" });
+
+ } catch (error) {
+
+  res.status(500).json({ message: "Error al eliminar el producto", error });
+ }
+};
